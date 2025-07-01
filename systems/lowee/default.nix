@@ -1,11 +1,6 @@
 toplevel @ {
   withSystem,
   inputs,
-  ...
-}: {
-  self,
-  system,
-  ...
 }: {
   flake.nixosConfigurations.lowee = withSystem "aarch64-linux" ({
     system,
