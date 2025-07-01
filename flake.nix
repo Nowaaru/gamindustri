@@ -7,7 +7,10 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nixpkgs-lib.url = "github:nix-community/nixpkgs.lib";
+    nix-utils = {
+      url = "github:nowaaru/nix-utils";
+    };
+
     nixpkgs-mirror.url = "github:nixos/nixpkgs/release-25.05";
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     nurpkgs.url = "github:nix-community/NUR";
@@ -21,24 +24,17 @@
 
   outputs = inputs @ {
     self,
-    flake-parts,
     flake-utils,
-    nixpkgs-lib,
+    nix-utils,
     ...
-  }:
-    flake-parts.lib.mkFlake {inherit inputs;} ({
+  }: let
+    inherit (nix-utils) lib;
+  in
+    lib.gamindustri.mkFlake ({
       withSystem,
       flake-parts-lib,
       ...
     }: let
-      lib = nixpkgs-lib.outputs.lib.extend (_: _: {
-        flake-parts = flake-parts-lib;
-        gamindustri = {
-          mkFlake = flake-parts.lib.mkFlake {inherit inputs;};
-        };
-      });
-    in {
-      systems = flake-utils.lib.allSystems;
 
       imports = lib.attrsets.foldlAttrs (
         a: k: _:
@@ -104,15 +100,11 @@
       perSystem = {
         system,
         self',
+        inputs',
         ...
       }: let
-        default = import inputs.nixpkgs {
-          inherit system overlays config;
-        };
-        overlays = import ./overlays withSystem (inputs
-          // {
-            inherit (default) lib;
-          });
+        inherit (inputs'.nix-utils.legacyPackages) default;
+
         config = {
           allowUnfree = true;
           permittedInsecurePackages = [
@@ -123,25 +115,7 @@
         };
       in rec {
         _module.args.pkgs = legacyPackages.default;
-
-        legacyPackages = {
-          inherit default;
-
-          stable = import inputs.nixpkgs-mirror {
-            inherit system overlays config;
-          };
-
-          master = import inputs.nixpkgs-master {
-            inherit system overlays config;
-          };
-
-          nur = import inputs.nurpkgs {
-            pkgs = self'.legacyPackages.default;
-            nurpkgs = import inputs.nixpkgs {
-              inherit system config;
-            };
-          };
-        };
+        inherit (self'.nix-utils) legacyPackages;
       };
     });
 }
