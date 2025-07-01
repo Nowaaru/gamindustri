@@ -35,6 +35,28 @@
       flake-parts-lib,
       ...
     }: let
+      evaluatedSystemOptions = lib.attrsets.mapAttrs (k: _:
+        (lib.modules.evalModules {
+          modules = [
+            (import ./schema/meta.nix {
+              inherit (flake-utils.lib) allSystems;
+              inherit (lib.options) mkOption;
+              inherit (lib) types mkIf mkMerge;
+            })
+            {
+              config = import ./systems/${k}/meta.nix {
+                inherit self inputs lib;
+              };
+            }
+          ];
+        }).config) (lib.attrsets.filterAttrs (k: v: v == "directory" && (builtins.pathExists (./systems/${k} + "/meta.nix"))) (builtins.readDir ./systems));
+    in {
+      systems =
+        lib.attrsets.foldlAttrs (
+          acc: _: v:
+            acc ++ v.systems
+        ) []
+        evaluatedSystemOptions;
 
       imports = lib.attrsets.foldlAttrs (
         a: k: _:
@@ -58,18 +80,13 @@
 
                   mkBuildPlatformError = wrongPlatform: rightPlatform: "cannot build configuration '${k}'; architecture '${rightPlatform}' is needed, but i am a '${wrongPlatform}'.";
 
-                  evaluatedOptions = lib.modules.evalModules {
-                    modules = import ./systems/${k}/meta.nix {
-                      inherit self inputs lib;
-                    };
-                  };
-
                   userArchitecture = lib.strings.trim (builtins.readFile (thisSystem.pkgs.runCommandLocal "architecture-check-${k}" {} ''
                     uname -m > $out;
                   ''));
 
-                  userHasThisArchitecture = lib.assertMsg (lib.strings.hasPrefix userArchitecture thisSystem.pkgs.stdenv.system) (mkBuildPlatformError userArchitecture thisSystem.pkgs.stdenv.system);
-                in (imported
+                  userHasThisArchitecture = lib.assertMsg (lib.strings.hasPrefix userArchitecture (builtins.elemAt (lib.strings.split "-" thisSystem.pkgs.stdenv.system) 0)) (mkBuildPlatformError userArchitecture thisSystem.pkgs.stdenv.system);
+                in
+                  imported
                   // {
                     imports = [
                       (
@@ -92,7 +109,7 @@
                         else {}
                       )
                     ];
-                  }))
+                  })
               else {}
           )
       ) [] (lib.attrsets.filterAttrs (k: _: k != "default.nix") (builtins.readDir ./systems));
