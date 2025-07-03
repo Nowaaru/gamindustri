@@ -15,22 +15,23 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     nurpkgs.url = "github:nix-community/NUR";
 
-    flake-parts.url = "github:hercules-ci/flake-parts";
-    flake-utils.url = "github:numtide/flake-utils";
 
     nixgl.url = "github:nix-community/nixGL";
     lanzaboote.url = "github:nix-community/lanzaboote";
+    flake-parts.follows = "gamindustri-utils/flake-parts";
+    flake-utils.follows = "gamindustri-utils/flake-utils";
   };
 
   outputs = inputs @ {
     self,
     flake-utils,
     nix-utils,
+    flake-parts,
     ...
   }: let
     inherit (nix-utils) lib;
   in
-    lib.gamindustri.mkFlake ({
+    flake-parts.lib.mkFlake {inherit inputs;} ({
       withSystem,
       flake-parts-lib,
       ...
