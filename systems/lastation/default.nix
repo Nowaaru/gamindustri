@@ -1,4 +1,8 @@
-toplevel @ { withSystem, inputs }: {
+toplevel @ {
+  withSystem,
+  inputs,
+  lib,
+}: {
   flake.nixosConfigurations.lastation = withSystem "x86_64-linux" ({self', ...}: let
     pkgs = self'.legacyPackages.default;
     specialArgs = {
@@ -7,7 +11,7 @@ toplevel @ { withSystem, inputs }: {
       inherit inputs;
     };
   in
-    inputs.nixpkgs.lib.nixosSystem {
+    lib.nixosSystem {
       inherit specialArgs;
       inherit (pkgs) lib;
 
