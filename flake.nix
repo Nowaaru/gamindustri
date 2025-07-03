@@ -12,13 +12,6 @@
       id = "nix-utils";
     };
 
-    nixpkgs-mirror.url = "github:nixos/nixpkgs/release-25.05";
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    nurpkgs.url = "github:nix-community/NUR";
-
-
-    nixgl.url = "github:nix-community/nixGL";
-    lanzaboote.url = "github:nix-community/lanzaboote";
     flake-parts.follows = "gamindustri-utils/flake-parts";
     flake-utils.follows = "gamindustri-utils/flake-utils";
   };
