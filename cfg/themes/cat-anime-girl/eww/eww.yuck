@@ -1,0 +1,281 @@
+;(defvar IS_TESTING "-c ~/.diary/Modules/User/Hyprland/themes/cat-anime-girl/eww/")
+(defvar IS_TESTING "")
+(defvar selected "")
+(defvar flavor_text "")
+(defvar closing false)
+
+(defvar ico_afternoon "󰖙")
+(defvar ico_morning "󰖙")
+(defvar ico_moonset "")
+(defvar ico_sunset "󰖚")
+(defvar ico_witching "󱇫")
+(defvar ico_night "")
+
+(defvar poll_cpu true)
+(defpoll cpu_arch :interval "1s"
+                  :initial "x86_64"
+                  :run-while poll_cpu
+                  `fish -c "set arch (lscpu | grep Architecture | string split \":\" | string trim | string match -ir '(x.*)'); echo \\$arch[1]"`)
+
+(defvar poll_hour true)
+(defpoll hour :interval "1s"
+              :initial "night"
+              :run-while poll_hour
+              `
+              CURDATE=$(date +%H)
+              if [ $CURDATE -ge 20 ]; then # late night
+                  echo "night"
+              elif [ $CURDATE -ge 18 ]; then # evening
+                  echo "moonset"
+              elif [ $CURDATE -ge 12 ]; then # afternoon
+                  echo "afternoon"
+              elif [ $CURDATE -ge 7 ]; then # morning
+                  echo "morning"
+              elif [ $CURDATE -ge 4 ]; then # early morning
+                  echo "sunset"
+              elif [ $CURDATE -ge 3 ]; then # witching hour
+                  echo "witching"
+              elif [ $CURDATE -ge 0 ]; then # midnight
+                  echo "night"
+              fi
+              `)
+
+(defvar poll_workspace true)
+(defpoll workspace_special :initial ""
+                           :interval "100ms" 
+                           :run-while poll_workspace
+                           `hyprctl monitors | grep special | awk 'gsub(/special:|\\(|\\)/, "", $4) {print $4}'`)
+
+(defwidget poweropt [name icon text ?onclick_before ?onclick_after ?onclick_during ?doclosing ?timeout ?artificial_closing_duration ?exitduration ?onclick_text ?height ?tooltip]
+           (button :class "poweroption ${name} ${selected == name ? "selected" : ""} ${closing ? "closing" : ""}"
+                   :height {height != "" ? height : 160}
+                   :tooltip {tooltip}
+                   :timeout {timeout != "" ? timeout : "2s"}
+                   :onclick "
+                            eww ${IS_TESTING} update flavor_text='${onclick_text}';
+                            eww ${IS_TESTING} update selected='${name}'
+                            ${onclick_before} 
+                            ${doclosing != "" ? "fish -c '${artificial_closing_duration != "" ? "sleep ${artificial_closing_duration}; wait $last_pid;" : ""} ${onclick_during}; eww ${IS_TESTING} update closing=true'" : "${onclick_during}"};
+                            ${exitduration != "" ? "fish -c 'sleep ${exitduration}; wait $last_pid';" : ""}
+                            ${onclick_after}
+                            eww ${IS_TESTING} close poweropts;
+                            eww ${IS_TESTING} update closing=false
+                            eww ${IS_TESTING} update flavor_text=''
+                            eww ${IS_TESTING} update selected=''
+                            "
+                            (revealer :class "revealer"
+                                      :transition "crossfade"
+                                      :reveal {selected == "" || selected == name ? true : false}
+                                      (overlay :width 160
+                                              (label :class "icon ${name}_icon"
+                                                      :text "${icon}"
+                                                      :justify "center"
+                                                      :yalign 0.5)
+                                              (revealer :reveal {selected != name}
+                                                        (label :class "label ${name}_label ${selected == name ? "invis" : ""}"
+                                                                :text "${text}"
+                                                                :justify "center"
+                                                                :yalign 0.72))))))
+
+(defwidget topbar_item [?halign ?width ?tooltip ?space-evenly]
+           (eventbox :class "topbar_hoverbox"
+                     (box :class "topbar_container"
+                          :halign {halign != ""  ? halign : "end"}
+                          :width {width != "" ? width : 96}
+                          :spacing 8
+                          :space-evenly {space-evenly != "" ? space-evenly : true}
+                          :tooltip {tooltip}
+                          (children))))
+
+(defwidget __unique_topbar_time []
+           (box :class "time_container"
+                :tooltip {formattime(EWW_TIME, "%B %e, %Y (%A)")}
+                (box :class "time"
+                      :spacing 12
+                      :space-evenly false
+                      (literal :content '(label
+                      :class "icon ${hour}"
+                      :width 16
+                      :halign "start"
+                      :hexpand true
+                      :text "\$\{ico_${hour}\}\")')
+                      (label 
+                            :class "time ${hour}"
+                            :width 15
+                            :text "${formattime(EWW_TIME, "%I:%M")}"))
+             ))
+
+(defwidget topbar_cpu []
+           (topbar_item :tooltip {cpu_arch == "x86_64" ? "64-bit processor" : "32-bit processor"}
+                        (box :class "cpu_container"
+                              :halign "center"
+                              :spacing 16
+                              :space-evenly false
+                              (label :class "cpu"
+                                    :text "${cpu_arch == "x86_64" ? "󰻠": "${cpu_arch}"}")
+                              (label :class "cpu usage"
+                                    :text "${round(EWW_CPU.avg, 0)}%"))))
+(defwidget topbar_mem []
+           (topbar_item :tooltip "Memory Usage"
+                        (box :class "mem_container"
+                             :spacing 016
+                             :space-evenly false
+                             (label :class "mem"
+                                    :halign "start"
+                                    :text "${round(EWW_RAM.used_mem_perc, 0)}%")
+                             (label :class "mem"
+                                    :halign "end"
+                                    :text "󰍛")
+                             )))
+
+(defwidget topbar_network [?show-num ?show-download]
+           (topbar_item :tooltip "Network Usage (${round(EWW_NET.enp5s0[show-download == false || show-download == '' ? "NET_UP" : "NET_DOWN"] * "1e-3", 3)}kb/s)"
+                        :width 64
+                        :space-evenly true
+                        (label :class "network network_${show-download == true || show-download != `` ? "down" : "up"} ${EWW_NET.enp5s0[show-download == true || show-download != "" ? "NET_DOWN" : "NET_UP"] > 0 ? "in-use" : ""}"
+                               :halign {show-num == false ? "center" : "center"}
+                               :text "${show-download == "" ?  "" : ""}")))
+(defwidget topbar_workspace [workspace]
+           (box :class "topbar_container silent"
+                :valign "end"
+                :orientation "v"
+                (revealer :transition "slidedown"
+                          :duration "1s"
+                          :reveal {workspace != ""}
+                          (label :class "workspace"
+                                 :text "${workspace}"))))
+
+(defwidget topbar_section [class ?silent ?halign ?space-evenly]
+           (box :class "${class} section ${silent != "" ? "silent" : ""}"
+                :halign {halign != "" ? halign : "baseline"}
+                :space-evenly {space-evenly != "" ? space-evenly : true}
+                (children)))
+
+
+(defwidget volume_slider []
+      (box :class "volume"
+           :halign "end"
+           :vexpand false
+           (label :text "world")
+           (scale :class "slider"
+                  :width 120
+
+                  :min 0
+                  :max 100
+                  :draw-value true
+
+                  :orientation "h"
+                  )))
+
+(defwindow topbar 
+           :monitor 0
+           :stacking "fg"
+           :namespace "eww-blur"
+           :exclusive true
+           :geometry (geometry :x "0%"
+                               :y "8px"
+                               :width "85%"
+                               :height "24px"
+                               :anchor "center top") 
+           (box :class "topbar_main"
+                :spacing -16
+                :space-evenly false
+                :orientation "v"
+                    (centerbox :class "main silent"
+                          (topbar_section :class "left"
+                                          :space-evenly false
+                                          :halign "end"
+                                          (topbar_cpu)
+                                          (topbar_network :show-num false))
+                          (topbar_section :class "center"
+                                          (__unique_topbar_time))
+                          (topbar_section :class "right"
+                                          :space-evenly false
+                                          :halign "start"
+                                          (topbar_network :show-download true)
+                                          (topbar_mem)
+                                          ))
+                    (topbar_workspace :workspace {workspace_special})))
+
+(defwindow blur 
+           :monitor 0
+           :stacking "fg"
+           :namespace "eww-blur"
+           :geometry (geometry :x "0%"
+                               :y "0%"
+                               :width "100%"
+                               :height "100%"
+                               :anchor "center center")
+           (overlay (button :class "blur"
+                            :onclick "eww ${IS_TESTING} close-all")))
+
+; TODO: fix text size of poweropt labels
+; (they're a bit too big?)
+
+(defwindow poweropts
+           :monitor 0
+           :stacking "overlay"
+           :namespace "eww-blur"
+           :geometry (geometry :x "0%"
+                               :y "0%"
+                               :width "100%"
+                               :height "100%"
+                               :anchor "center center")
+           (overlay 
+              (revealer
+                        :reveal {flavor_text != ""}
+                        :transition "fade"
+                        (label :class "end-text" 
+                                :yalign 0.6
+                                :text "${flavor_text}"))
+              (button :class "blur ${closing && selected == "" ? "closing" : ""}"
+                      :onclick "eww -c . update closing=true; sleep 0.5; wait $last_pid; eww -c . close poweropts; eww -c . update closing=false;"
+                      :timeout "1s")
+              (box :class "window"
+                    :valign "center"
+                    :halign "center"
+                    :width 320
+                    :height 160
+                    (box :class "inner ${closing ? "closing" : ""}"
+                        (literal :content "
+                        (${selected == "" ? "box" : "overlay"} :class 'items'
+                              ${selected == "" ? ":spacing 8" : ""}
+                              ${selected == "" ? ":orientation 'h'" : ""}
+                              (poweropt :name 'power'
+                                        :icon '󰤆'
+
+                                        :onclick_text 'shutting down...'
+                                        :timeout '4s'
+                                        :text 'poweroff'
+
+                                        :artificial_closing_duration '1s'
+                                        :exitduration '2s'
+
+                                        :onclick_before 'systemctl poweroff'
+                                        :doclosing true)
+                              (poweropt :name 'restart'
+                                        :icon '󰜉'
+
+                                        :onclick_text 'rebooting...'
+                                        :timeout '4s'
+                                        :text 'restart'
+
+                                        :artificial_closing_duration '1s'
+                                        :exitduration '2s'
+
+                                        :onclick_during 'systemctl reboot'
+                                        :doclosing true)
+                              (poweropt :name 'logout'
+                                        :icon '󰍃'
+
+                                        :onclick_text \"logging out.\"
+                                        :timeout '4s'
+                                        :text 'logout'
+
+                                        :artificial_closing_duration '1s'
+                                        :exitduration '2s'
+
+                                        :onclick_after 'hyprctl dispatch exit'
+                                        :doclosing true))")))
+                              
+             ))
