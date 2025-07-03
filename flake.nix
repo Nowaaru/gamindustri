@@ -23,7 +23,9 @@
     gamindustri-utils,
     ...
   }: let
-    inherit (nix-utils) lib;
+    lib = gamindustri-utils.lib.extend (super: prev: {
+      inherit (gamindustri-utils.inputs.nixpkgs.lib) nixosSystem;
+    });
   in
     flake-parts.lib.mkFlake {inherit inputs;} ({
       withSystem,
