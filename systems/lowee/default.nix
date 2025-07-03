@@ -1,6 +1,7 @@
 toplevel @ {
   withSystem,
   inputs,
+  lib,
 }: {
   flake.nixosConfigurations.lowee = withSystem "aarch64-linux" ({
     system,
@@ -14,7 +15,7 @@ toplevel @ {
       inherit inputs;
     };
   in
-    inputs.nixpkgs.lib.nixosSystem {
+    lib.nixosSystem {
       inherit specialArgs;
       inherit (pkgs) lib;
 
