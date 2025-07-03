@@ -7,8 +7,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    nix-utils = {
-      url = "github:nowaaru/nix-utils";
+    gamindustri-utils = {
+      type = "indirect";
+      id = "nix-utils";
     };
 
     nixpkgs-mirror.url = "github:nixos/nixpkgs/release-25.05";
@@ -25,8 +26,8 @@
   outputs = inputs @ {
     self,
     flake-utils,
-    nix-utils,
     flake-parts,
+    gamindustri-utils,
     ...
   }: let
     inherit (nix-utils) lib;
@@ -121,7 +122,7 @@
         inputs',
         ...
       }: let
-        inherit (inputs'.nix-utils.legacyPackages) default;
+        inherit (inputs'.gamindustri-utils.legacyPackages) default;
 
         config = {
           allowUnfree = true;
@@ -133,7 +134,7 @@
         };
       in rec {
         _module.args.pkgs = legacyPackages.default;
-        inherit (self'.nix-utils) legacyPackages;
+        inherit (inputs'.gamindustri-utils) legacyPackages;
       };
     });
 }
