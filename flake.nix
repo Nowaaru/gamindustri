@@ -62,7 +62,7 @@
             let
               metaPathExists = builtins.pathExists (./systems/${k} + "/meta.nix");
               metafile = lib.trivial.warnIfNot metaPathExists "meta file for system '${k}' could not be found" metaPathExists;
-              imported = flake-parts-lib.importApply ./systems/${k}/default.nix {inherit inputs withSystem;};
+              imported = flake-parts-lib.importApply ./systems/${k}/default.nix {inherit inputs lib withSystem;};
               importedContents =
                 if (lib.asserts.assertMsg ((builtins.length imported.imports) == 1) "system-file ${k} should not have more than one import")
                 then builtins.elemAt imported.imports 0
