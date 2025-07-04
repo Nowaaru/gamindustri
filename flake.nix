@@ -2,18 +2,25 @@
   description = "Description for the project";
 
   inputs = {
+    flake-parts.follows = "gamindustri-utils/flake-parts";
+    flake-utils.follows = "gamindustri-utils/flake-utils";
+    lanzaboote.url = "github:nix-community/lanzaboote";
+
     home-manager = {
       url = "github:nix-community/home-manager/master";
       inputs.nixpkgs.follows = "gamindustri-utils/nixpkgs";
     };
+
 
     gamindustri-utils = {
       type = "indirect";
       id = "nix-utils";
     };
 
-    flake-parts.follows = "gamindustri-utils/flake-parts";
-    flake-utils.follows = "gamindustri-utils/flake-utils";
+    gamindustri-residents = {
+      type = "indirect";
+      id = "gamindustri-residents";
+    };
   };
 
   outputs = inputs @ {
@@ -28,6 +35,7 @@
     });
   in
     flake-parts.lib.mkFlake {inherit inputs;} ({
+      config,
       withSystem,
       flake-parts-lib,
       ...
@@ -43,19 +51,12 @@
             {
               config = import ./systems/${k}/meta.nix {
                 inherit self inputs lib;
+                flake-config = config;
               };
             }
           ];
         }).config) (lib.attrsets.filterAttrs (k: v: v == "directory" && (builtins.pathExists (./systems/${k} + "/meta.nix"))) (builtins.readDir ./systems));
-    in {
-      systems =
-        lib.attrsets.foldlAttrs (
-          acc: _: v:
-            acc ++ v.systems
-        ) []
-        evaluatedSystemOptions;
-
-      imports = lib.attrsets.foldlAttrs (
+      systemImports = lib.attrsets.foldlAttrs (
         a: k: _:
           a
           ++ lib.lists.singleton (
@@ -89,19 +90,26 @@
                       (
                         if (lib.assertMsg (configurationAmount == 1) "system-file ${k} must export exactly one configuration and no more.")
                         then {
-                          flake.nixosConfigurations.${k} =
-                            thisSystem
+                          flake.nixosConfigurations.${k} = (thisSystem
                             // {
                               config =
                                 if userHasThisArchitecture
                                 then thisSystem.config
                                 else thisSystem.config;
-                              _module =
-                                thisSystem._module
-                                // {
-                                  specialArgs = thisSystem.specialArgs // metafile.specialArgs;
-                                };
-                            };
+
+                              # _module =
+                              #   thisSystem._module
+                              #   // {
+                              #     specialArgs =
+                              #       thisSystem._module.specialArgs // evaluatedSystemOptions.${k}.specialArgs;
+                              #           
+                              #     args = (thisSystem._module.args // {
+                              #           modules = [ { _module.args = evaluatedSystemOptions.${k}.specialArgs; } ] ++ thisSystem._module.args.modules;
+                              #     });
+                              #
+                              #
+                              #   };
+                            }).extendModules { modules = [ { _module.args = evaluatedSystemOptions.${k}.specialArgs; } ]; };
                         }
                         else {}
                       )
@@ -110,6 +118,15 @@
               else {}
           )
       ) [] (lib.attrsets.filterAttrs (k: _: k != "default.nix") (builtins.readDir ./systems));
+    in {
+      imports = systemImports;
+
+      systems =
+        lib.attrsets.foldlAttrs (
+          acc: _: v:
+            acc ++ v.systems
+        ) []
+        evaluatedSystemOptions;
 
       perSystem = {
         system,
@@ -117,19 +134,13 @@
         inputs',
         ...
       }: let
-        inherit (inputs'.gamindustri-utils.legacyPackages) default;
-
-        config = {
-          allowUnfree = true;
-          permittedInsecurePackages = [
-            "dotnet-sdk-6.0.428"
-            "dotnet-sdk-7.0.410"
-            "dotnet-runtime-7.0.20"
-          ];
-        };
       in rec {
-        _module.args.pkgs = legacyPackages.default;
         inherit (inputs'.gamindustri-utils) legacyPackages;
+        _module.args.pkgs = legacyPackages.default;
+      };
+
+      flake.flakeModules.default = _: {
+        imports = systemImports;
       };
     });
 }
