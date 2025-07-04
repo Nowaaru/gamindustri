@@ -11,7 +11,6 @@
       inputs.nixpkgs.follows = "gamindustri-utils/nixpkgs";
     };
 
-
     gamindustri-utils = {
       type = "indirect";
       id = "nix-utils";
@@ -96,20 +95,7 @@
                                 if userHasThisArchitecture
                                 then thisSystem.config
                                 else thisSystem.config;
-
-                              # _module =
-                              #   thisSystem._module
-                              #   // {
-                              #     specialArgs =
-                              #       thisSystem._module.specialArgs // evaluatedSystemOptions.${k}.specialArgs;
-                              #           
-                              #     args = (thisSystem._module.args // {
-                              #           modules = [ { _module.args = evaluatedSystemOptions.${k}.specialArgs; } ] ++ thisSystem._module.args.modules;
-                              #     });
-                              #
-                              #
-                              #   };
-                            }).extendModules { modules = [ { _module.args = evaluatedSystemOptions.${k}.specialArgs; } ]; };
+                            }).extendModules {modules = [{_module.args = evaluatedSystemOptions.${k}.specialArgs;}];};
                         }
                         else {}
                       )
