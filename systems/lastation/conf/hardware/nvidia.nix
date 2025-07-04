@@ -3,6 +3,12 @@
   lib,
   ...
 }: {
+  hardware.bumblebee = {
+    enable = true;
+    pmMethod = "auto";
+    connectDisplay = false;
+  };
+
   hardware.nvidia = {
     prime = {
       allowExternalGpu = true;
