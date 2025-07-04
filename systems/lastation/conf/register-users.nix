@@ -2,9 +2,9 @@
   inputs,
   pkgs,
   lib,
+  flake-config,
   ...
-}: 
-rec {
+}: rec {
   users.users = builtins.mapAttrs (k: _:
     {
       isNormalUser = true;
@@ -21,5 +21,5 @@ rec {
         then (import path)
         else {}
     ))
-  (lib.attrsets.filterAttrs (_: v: v == "directory") (builtins.readDir (inputs.self + /users)));
+  (lib.attrsets.filterAttrs (_: v: v == "directory") (builtins.readDir inputs.gamindustri-residents));
 }

@@ -1,10 +1,9 @@
-{ inputs, ... }: 
-{
+{inputs, ...}: {
   users.groups.openrazer = {
     name = "openrazer";
     gid = null;
 
-    members = [ "noire" "root" ];
+    members = ["noire" "root"];
   };
 
   hardware.openrazer = {
@@ -14,10 +13,10 @@
     batteryNotifier.enable = true;
     devicesOffOnScreensaver = true;
 
-    users = 
+    users =
       # do not add users that don't actually exist in /home/
-      builtins.filter 
-        (elem: builtins.pathExists "/home/${elem}")
-        (builtins.attrNames (builtins.readDir (inputs.self + /users)));
+      builtins.filter
+      (elem: builtins.pathExists "/home/${elem}")
+      (builtins.attrNames (builtins.readDir (inputs.gamindustri-residents)));
   };
 }

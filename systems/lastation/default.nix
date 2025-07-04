@@ -21,13 +21,14 @@ toplevel @ {
         /*
         readonly pkgs
         */
-        {
+        ({config, ...}: {
           imports = [
-            nixpkgs.nixosModules.readOnlyPkgs
+            inputs.gamindustri-utils.inputs.nixpkgs.nixosModules.readOnlyPkgs
           ];
 
           nixpkgs.pkgs = pkgs.lib.mkForce pkgs;
-        }
+        })
+
         /*
         home manager
         */

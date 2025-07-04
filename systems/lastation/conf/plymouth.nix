@@ -1,11 +1,10 @@
 {
   pkgs,
   lib,
-stable,
+  stable,
   inputs,
   ...
 }: {
-
   systemd.services.wait-for-plymouth-animation = {
     enable = true;
     description = "Waits for Plymouth animation to finish";
@@ -29,7 +28,7 @@ stable,
 
     plymouth = {
       enable = true;
-      theme =  "plymouth-theme"; #  "catppuccin-mocha";
+      theme = "plymouth-theme"; #  "catppuccin-mocha";
       extraConfig = ''
         [Daemon]
         DeviceScale=96
@@ -37,11 +36,11 @@ stable,
       themePackages = with pkgs; [
         (catppuccin-plymouth.override {variant = "mocha";})
         (adi1090x-plymouth-themes.override {selected_themes = ["hexagon_red"];})
-        (lib.gamindustri.mkPlymouthTheme {
+        (lib.gamindustri.mkPlymouthTheme pkgs {
           name = "plymouth-theme";
           description = "A cool Plymouth theme.";
           comment = "Welcome to Gamindustri!";
-          image = inputs.self + /cfg/themes/cat-anime-girl/cat-anime-girl.png;
+          image = inputs.gamindustri-utils + /cfg/themes/cat-anime-girl/cat-anime-girl.png;
           resolution = "1920x1080";
           framerate = 50;
         })

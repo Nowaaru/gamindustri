@@ -138,7 +138,7 @@ for directories above their own dedicated edirectory.
       # Disable XTerm
       desktopManager.xterm.enable = false;
       displayManager.startx.enable = true;
-      displayManager.xserverArgs = [ "-listen tcp" "-dpi 96" ];
+      displayManager.xserverArgs = ["-listen tcp" "-dpi 96"];
       exportConfiguration = true;
     };
 
@@ -278,7 +278,6 @@ for directories above their own dedicated edirectory.
       nix-du
     ];
   };
-
 
   system.stateVersion = "23.11"; # Did you read the comment?
   virtualisation.waydroid.enable = true;

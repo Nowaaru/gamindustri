@@ -1,9 +1,14 @@
-{self, inputs, lib, ...} @ args: {
+{
+  flake-config,
+  inputs,
+  ...
+}: {
   description = "The primary workstation for Noire.";
   systems = ["x86_64-linux"];
 
   specialArgs = {
-    inherit inputs lib;
+    # inherit (inputs.gamindustri-utils.legacyPackages.x86_64-linux.default) lib;
+    inherit inputs flake-config;
   };
 
   repositories = {
