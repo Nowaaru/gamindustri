@@ -1,17 +1,23 @@
-{
+flakeParams @ {
   flake-config,
+  withSystem,
+  lib,
   inputs,
   ...
-}: {
-  description = "The primary workstation for Noire.";
-  systems = ["x86_64-linux"];
+}: rec {
+  packages.readonly.enable = true;
 
-  specialArgs = {
-    # inherit (inputs.gamindustri-utils.legacyPackages.x86_64-linux.default) lib;
-    inherit inputs flake-config;
+  system = {
+    file = ./default.nix;
+
+    description = "The primary workstation for Noire.";
+    architecture = "x86_64-linux";
   };
 
   repositories = {
-    inherit (inputs) nur unstable stable master default;
+    main = inputs.gamindustri-utils.legacyPackages.${system.architecture}.default;
+    fallback = {
+      inherit (inputs.gamindustri-utils.legacyPackages.${system.architecture}) nur unstable stable master default;
+    };
   };
 }
