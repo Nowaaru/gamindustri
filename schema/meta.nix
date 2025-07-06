@@ -1,15 +1,14 @@
 lib @ {
+
   mkIf,
   mkMerge, 
   mkEnableOption,
   mkOption,
   allSystems,
+  systemImportArgs,
   ...
 }: 
-moduleParemeters @ {config, ... }: 
-let 
-        syscfg = config.system; 
-    in 
+baseModule @ {config, ... }: 
 {
   options = with lib.types; 
   {
@@ -29,12 +28,6 @@ let
                   default = "A NixOS system.";
                 };
 
-                architectures = mkOption {
-                  description = "The potential system architectures that this configuration can be run on. Cannot be set if 'system' is set.";
-                  type = if (builtins.isString config.system.architecture) then listOf (enum [ config.system.architecture ]) else (listOf (enum allSystems));
-                  default = [ config.system.architecture ];
-                };
-
                 architecture = mkOption {
                   description = "The system architecture that this configuration should be run on.";
                   type = nullOr (enum allSystems);
@@ -46,8 +39,29 @@ let
                   type = attrs;
                   default = {};
                 };
+
+                baseModules = mkOption {
+                    description = "Intrinsic modules to the system configuration.";
+                    type = listOf (oneOf [(functionTo attrs) attrs]); # TODO: fix this module type
+                };
             };
+
+
+            config.baseModules = [ 
+                { nixpkgs.pkgs = lib.mkForce baseModule.config.repositories.main; } 
+            ];
+
+            config.specialArgs = lib.mkMerge
+                [
+                    { 
+                        # pkgs = baseModule.config.repositories.main; 
+                        meta = baseModule;
+                    }
+                    baseModule.config.repositories.fallback
+                    systemImportArgs
+                ];
         });
+
     };
 
 
@@ -58,14 +72,12 @@ let
                 type = submodule (readonlyModule@{ config, ...}: {
                     options.enable = mkEnableOption "readonly packages for this system.";
 
-                    config = mkIf (config.packages.readonly.enable) {
-                        modules = [
-                            ({config, ...}: {
+                    config = mkIf readonlyModule.enable {
+                        system.baseModules = [
+                            ({}: {
                                 imports = [
                                     inputs.gamindustri-utils.inputs.nixpkgs.nixosModules.readOnlyPkgs
                                 ];
-
-                                nixpkgs.pkgs = moduleParameters.config.repositories.main;
                             })
                         ];         
                     };
@@ -74,15 +86,15 @@ let
         });
     };
 
-
     repositories = {
       main = mkOption {
         description = "Primary repositiory of utilities and packages to be added to as 'pkgs'";
-        type = package;
+        type = lib.types.pkgs;
       };
+
       fallback = mkOption {
         description = "Fallback repositories of utilities and packages to be added to 'specialArgs'";
-        type = attrsOf package;
+        type = attrsOf lib.types.pkgs;
         default = {};
       };
     };

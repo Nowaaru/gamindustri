@@ -1004,8 +1004,8 @@
         "user-noire": "user-noire"
       },
       "locked": {
-        "lastModified": 1751758126,
-        "narHash": "sha256-36tKxAmmrVPMbEDT8o+YDBBtuIbAbtgT02Ns9T9K7cY=",
+        "lastModified": 1751795139,
+        "narHash": "sha256-qM0+aQoSIVPUuUlEpadlQkFXvNobWigqIVAeTBMFRTM=",
         "path": "/gamindustri/residents",
         "type": "path"
       },
@@ -1026,8 +1026,8 @@
         "nurpkgs": "nurpkgs"
       },
       "locked": {
-        "lastModified": 1751592262,
-        "narHash": "sha256-cyaYs/Gr5R/OgZtGo4BsdgsoNNR3KhN52/Ovw8CsyPo=",
+        "lastModified": 1751794752,
+        "narHash": "sha256-lhD8Oy+Kf8x5EiR06moyNZe3oo1p6BnQ49ushZd/Eus=",
         "path": "/gamindustri/utils",
         "type": "path"
       },
@@ -1048,8 +1048,8 @@
         "nurpkgs": "nurpkgs_2"
       },
       "locked": {
-        "lastModified": 1751592262,
-        "narHash": "sha256-cyaYs/Gr5R/OgZtGo4BsdgsoNNR3KhN52/Ovw8CsyPo=",
+        "lastModified": 1751797055,
+        "narHash": "sha256-Pkyd8ux9Q9uf8ac22UZa9w/pk/5pYSYND52bnxDrbpU=",
         "path": "/gamindustri/utils",
         "type": "path"
       },
