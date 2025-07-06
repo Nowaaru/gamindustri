@@ -39,6 +39,7 @@
       flake-parts-lib,
       ...
     }: let
+      inherit (flake-parts-lib) importApply;
       evaluatedSystemOptions = lib.attrsets.mapAttrs (k: _:
         (lib.modules.evalModules {
           modules = [
