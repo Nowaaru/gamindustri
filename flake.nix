@@ -79,7 +79,7 @@
                   flake-parts-lib.importApply ./systems/${k}/default.nix ((evaluatedSystemOptions.${k}.system.specialArgs)
                     // systemImportArgs
                     // {pkgs = evaluatedSystemOptions.${k}.repositories.main;}
-                    // {meta = lib.trace "hello there" evaluatedSystemOptions.${k};})
+                    // {meta = evaluatedSystemOptions.${k};})
                 else {};
 
               importedContents =
