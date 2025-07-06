@@ -12,7 +12,7 @@ toplevel @ {
     };
   in
     lib.nixosSystem {
-      inherit specialArgs;
+      # inherit specialArgs;
       inherit (pkgs) lib;
 
       modules = with inputs; [
@@ -21,13 +21,13 @@ toplevel @ {
         /*
         readonly pkgs
         */
-        ({config, ...}: {
-          imports = [
-            inputs.gamindustri-utils.inputs.nixpkgs.nixosModules.readOnlyPkgs
-          ];
-
-          nixpkgs.pkgs = pkgs.lib.mkForce pkgs;
-        })
+        # ({config, ...}: {
+        #   imports = [
+        #     inputs.gamindustri-utils.inputs.nixpkgs.nixosModules.readOnlyPkgs
+        #   ];
+        #
+        #   nixpkgs.pkgs = pkgs.lib.mkForce pkgs;
+        # })
 
         /*
         home manager
