@@ -40,15 +40,14 @@
       ...
     }: let
       inherit (flake-parts-lib) importApply;
-      systemImportArgs = 
-      let 
-        newImportApply = source: args: 
+      systemImportArgs = let
+        newImportApply = source: args:
           importApply source (systemImportArgs // args);
       in {
-          inherit inputs lib withSystem;
-          importApply = newImportApply;
-          self = self.outPath;
-          flake-config = self;
+        inherit inputs lib withSystem;
+        importApply = newImportApply;
+        self = self.outPath;
+        flake-config = self;
       };
 
       evaluatedSystemOptions = lib.attrsets.mapAttrs (k: _:
@@ -74,11 +73,15 @@
             let
               metaPathExists = builtins.pathExists (./systems/${k} + "/meta.nix");
               metafile = lib.trivial.warnIfNot metaPathExists "meta file for system '${k}' could not be found" metaPathExists;
-              imported = 
-                if (metafile) 
-                    then flake-parts-lib.importApply ./systems/${k}/default.nix ((evaluatedSystemOptions.${k}.system.specialArgs) // systemImportArgs // { pkgs = evaluatedSystemOptions.${k}.baseModule.config.repositories.main;})
-                    else {};
-                    
+              imported =
+                if metafile
+                then
+                  flake-parts-lib.importApply ./systems/${k}/default.nix ((evaluatedSystemOptions.${k}.system.specialArgs)
+                    // systemImportArgs
+                    // {pkgs = evaluatedSystemOptions.${k}.repositories.main;}
+                    // {meta = lib.trace "hello there" evaluatedSystemOptions.${k};})
+                else {};
+
               importedContents =
                 if (lib.asserts.assertMsg ((builtins.length imported.imports) == 1) "system-file ${k} should not have more than one import")
                 then builtins.elemAt imported.imports 0
@@ -89,7 +92,9 @@
                 (let
                   allConfigurations = importedContents.flake.nixosConfigurations;
                   configurationAmount = builtins.length (builtins.attrNames allConfigurations);
-                  thisSystem = importedContents.flake.nixosConfigurations.${builtins.elemAt (builtins.attrNames allConfigurations) 0};
+                  thisSystem = (importedContents.flake.nixosConfigurations.${builtins.elemAt (builtins.attrNames allConfigurations) 0}).extendModules {
+                    modules = evaluatedSystemOptions.${k}.system.baseModules;
+                  };
 
                   mkBuildPlatformError = wrongPlatform: rightPlatform: "cannot build configuration '${k}'; architecture '${rightPlatform}' is needed, but i am a '${wrongPlatform}'.";
 
@@ -112,28 +117,29 @@
                             systemIsConfiguration nixosSystem {} // newSystemArgs;
                         in
                           if (lib.assertMsg (configurationAmount == 1) "system-file ${k} must export exactly one configuration and no more.")
-                          then (
-                                let 
-                                    systemMeta = evaluatedSystemOptions.${k};
-                                in
-                                {
-                                    flake.nixosConfigurations.${k} = 
-                                        systemMeta.repositories.main.lib.nixosSystem (extractSystemVitals thisSystem {
-                                                inherit (systemMeta.system) specialArgs;
-                                                pkgs = systemMeta.repositories.main;
+                          then
+                            (
+                              let
+                                systemMeta = evaluatedSystemOptions.${k};
+                              in {
+                                flake.nixosConfigurations.${k} = systemMeta.repositories.main.lib.nixosSystem (extractSystemVitals thisSystem {
+                                  inherit (systemMeta.system) specialArgs;
+                                  pkgs = systemMeta.repositories.main;
 
-                                                modules = 
-                                                    (lib.lists.dropEnd 1 ((lib.lists.filter (v: 
-                                                            if (builtins.isAttrs v) && (v ? "_file")
-                                                                then (v._file != systemMeta.system.file)
-                                                                else (v != systemMeta.system.file))
-                                                            (if thisSystem ? "class" 
-                                                                then thisSystem._module.args.modules 
-                                                                else thisSystem.modules))))
-                                                        ++ systemMeta.system.baseModules;
-
-                                        });
-                                })
+                                  modules =
+                                    (lib.lists.dropEnd 1 (lib.lists.filter (v:
+                                        if (builtins.isAttrs v) && (v ? "_file")
+                                        then (v._file != systemMeta.system.file)
+                                        else (v != systemMeta.system.file))
+                                      (
+                                        if thisSystem ? "class"
+                                        then thisSystem._module.args.modules
+                                        else thisSystem.modules
+                                      )))
+                                    ++ systemMeta.system.baseModules;
+                                });
+                              }
+                            )
                           else {}
                       )
                     ];
