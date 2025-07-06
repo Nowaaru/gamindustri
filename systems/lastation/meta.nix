@@ -1,10 +1,4 @@
-flakeParams @ {
-  flake-config,
-  withSystem,
-  lib,
-  inputs,
-  ...
-}: rec {
+flakeParams @ {inputs, ...}: rec {
   packages.readonly.enable = true;
 
   system = {
