@@ -10,21 +10,21 @@ for directories above their own dedicated edirectory.
 {
   pkgs,
   lib,
+  self,
   inputs,
   ...
 }: {
-  imports =
-    [
-      ./register-users.nix
-      ./plymouth.nix
+  imports = [
+    ./register-users.nix
+    ./plymouth.nix
 
-      ./hardware
-      ./sleep.nix
-      ./secure-boot.nix
+    ./hardware
+    ./sleep.nix
+    ./secure-boot.nix
 
-      ../sys
-    ]
-    ++ (lib.gamindustri.mkModules (inputs.self + /modules));
+    ../sys
+  ];
+  # ++ (lib.gamindustri.mkModules (self + /modules));
 
   fonts = {
     enableDefaultPackages = true;
