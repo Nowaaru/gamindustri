@@ -10,8 +10,6 @@ for directories above their own dedicated edirectory.
 {
   pkgs,
   lib,
-  self,
-  inputs,
   ...
 }: {
   imports = [
