@@ -112,6 +112,7 @@
                               in {
                                 flake.nixosConfigurations.${k} = systemMeta.repositories.main.lib.nixosSystem (extractSystemVitals thisSystem {
                                   inherit (systemMeta.system) specialArgs;
+                                  inherit (systemMeta.repositories.main) lib;
                                   pkgs = systemMeta.repositories.main;
 
                                   modules =
