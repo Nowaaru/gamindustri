@@ -3,7 +3,7 @@ flakeParams @ {inputs, ...}: rec {
 
   system = {
     file = ./default.nix;
-    userPath = inputs.gamindustri-residents.outPath;
+    usersDir = inputs.gamindustri-residents.outPath;
 
     description = "The primary workstation for Noire.";
     architecture = "x86_64-linux";
