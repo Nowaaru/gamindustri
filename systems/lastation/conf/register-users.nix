@@ -1,25 +1,24 @@
+# TODO: integrate properly with evalUserMetaFile
 {
   inputs,
   pkgs,
   lib,
-  flake-config,
+  meta,
   ...
-}: rec {
-  users.users = builtins.mapAttrs (k: _:
-    {
-      isNormalUser = true;
-      description = "user - ${k}";
-      shell = pkgs.fish;
-      extraGroups = ["users" "networkmanager" "wheel" "libvirtd"];
-      packages = []; # managed via home-manager
-    }
-    // (
-      let
-        path = inputs.self + /users/${k}/meta.nix;
-      in
-        if (builtins.pathExists path)
-        then (import path)
-        else {}
-    ))
-  (lib.attrsets.filterAttrs (_: v: v == "directory") (builtins.readDir inputs.gamindustri-residents));
-}
+}: let
+  inherit (meta.system) usersDir;
+in
+  lib.throwIf true "The system is not currently able to register users. Please try again later." {
+    users.users = with lib.attrsets;
+      mapAttrs (k: _: let
+        user-meta =
+          lib.gamindustri.systems.evalUserMetaFile usersDir {};
+      in {
+        name = attrByPath ["name"] k user-meta;
+        isNormalUser = true;
+        description = "user - ${k}";
+        shell = pkgs.fish;
+        extraGroups = ["users" "networkmanager" "wheel" "libvirtd"];
+        packages = []; # managed via home-manager
+      }) (lib.attrsets.filterAttrs (_: v: v == "directory") (builtins.readDir usersDir));
+  }
