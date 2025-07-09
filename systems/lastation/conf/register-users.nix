@@ -7,18 +7,15 @@
   ...
 }: let
   inherit (meta.system) usersDir;
-in
-  lib.throwIf true "The system is not currently able to register users. Please try again later." {
-    users.users = with lib.attrsets;
-      mapAttrs (k: _: let
-        user-meta =
-          lib.gamindustri.systems.evalUserMetaFile usersDir {};
-      in {
-        name = attrByPath ["name"] k user-meta;
-        isNormalUser = true;
-        description = "user - ${k}";
-        shell = pkgs.fish;
-        extraGroups = ["users" "networkmanager" "wheel" "libvirtd"];
-        packages = []; # managed via home-manager
-      }) (lib.attrsets.filterAttrs (_: v: v == "directory") (builtins.readDir usersDir));
-  }
+in {
+  users.users = with lib.attrsets;
+    mapAttrs (k: _: let
+      user-meta =
+        (lib.gamindustri.systems.evalUserMetaFile "${usersDir}/${k}/meta.nix" {}).config;
+    in {
+      inherit (user-meta) name description shell;
+      extraGroups = user-meta.groups;
+      isNormalUser = true;
+      packages = lib.mkForce []; # managed via home-manager
+    }) (lib.attrsets.filterAttrs (dir_k: v: v == "directory" && builtins.pathExists "${usersDir}/${dir_k}/meta.nix") (builtins.readDir usersDir));
+}
