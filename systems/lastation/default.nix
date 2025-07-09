@@ -14,16 +14,6 @@ toplevel @ {
       modules = with inputs; [
         lanzaboote.nixosModules.lanzaboote
         home-manager.nixosModules.home-manager
-
-        /*
-        home manager
-        */
-        {
-          home-manager.useGlobalPkgs = true;
-          home-manager.useUserPackages = true;
-          environment.pathsToLink = ["/share/xdg-desktop-portal" "/share/applications"];
-        }
-
         ./conf
       ];
     });
