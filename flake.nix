@@ -50,22 +50,10 @@
         flake-config = self;
       };
 
-      evaluatedSystemOptions = lib.attrsets.mapAttrs (k: _:
-        (lib.modules.evalModules {
-          specialArgs = systemImportArgs;
+      evaluatedSystemOptions =
+        lib.attrsets.mapAttrs (k: _: (lib.gamindustri.systems.evalSystemMetafile ./systems/${k}/meta.nix systemImportArgs).config)
+        (lib.attrsets.filterAttrs (k: v: v == "directory" && (builtins.pathExists (./systems/${k} + "/meta.nix"))) (builtins.readDir ./systems));
 
-          modules = [
-            (importApply ./schema/meta.nix {
-              inherit (flake-utils.lib) allSystems;
-              inherit (lib.options) mkOption mkEnableOption;
-              inherit (lib) types mkIf mkMerge mkForce;
-              inherit (lib.gamindustri.meta) mkIfElse;
-              inherit systemImportArgs;
-            })
-
-            (importApply ./systems/${k}/meta.nix systemImportArgs)
-          ];
-        }).config) (lib.attrsets.filterAttrs (k: v: v == "directory" && (builtins.pathExists (./systems/${k} + "/meta.nix"))) (builtins.readDir ./systems));
       systemImports = lib.attrsets.foldlAttrs (
         a: k: _:
           a
