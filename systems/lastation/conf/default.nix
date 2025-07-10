@@ -219,11 +219,11 @@ for directories above their own dedicated edirectory.
 
     nh = {
       enable = true;
-      flake = "/home/noire/.diary"; # TODO: change to somewhere in /etc/ maybe? i dunno
+      flake = "/etc/nixos";
 
       clean = {
         enable = true;
-        dates = "weekly";
+        dates = "daily";
         extraArgs = "";
       };
     };
