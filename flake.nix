@@ -5,6 +5,8 @@
     flake-parts.follows = "gamindustri-utils/flake-parts";
     flake-utils.follows = "gamindustri-utils/flake-utils";
     lanzaboote.url = "github:nix-community/lanzaboote";
+    hyprland.url = "github:hyprwm/Hyprland/v0.48.1";
+    # github:<owner>/<repo>(/<rev-or-ref>)?(\?<params>)?
 
     home-manager = {
       url = "github:nix-community/home-manager/master";

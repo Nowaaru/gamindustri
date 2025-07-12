@@ -204,9 +204,6 @@ for directories above their own dedicated edirectory.
 
     firejail.enable = true;
 
-    # Hyprland!
-    hyprland = {enable = true;};
-
     xwayland.enable = true;
 
     # Some programs need SUID wrappers, can be configured further or are

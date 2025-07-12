@@ -35,7 +35,7 @@ System preinitialization. Used to configure Nix itself.
 
     # Plex alternative
     ./jellyfin.nix
-    
+
     # Wireless Desktop
     ./sunshine.nix
     ./ibus.nix
@@ -45,9 +45,12 @@ System preinitialization. Used to configure Nix itself.
 
     # nix-ld
     ./nix-ld.nix
-    
+
     # fuck this stupid os
     ./documentation-patch.nix
+
+    # Hyprland!
+    ./hypr.nix
   ];
 
   nix = {
